@@ -10,17 +10,21 @@ export interface Asking {
   description?: string
   /** A text to type: a name (one line) or a message (several). */
   input?: { label: string, value: string, placeholder?: string, multiline?: boolean, required?: boolean, secret?: boolean }
-  /** A second text, optional. */
+  /** A second one-line text under it, asked together (a remote's name, then its URL); required unless said otherwise. */
+  second?: { label: string, value: string, placeholder?: string, required?: boolean }
+  /** A note, optional. */
   note?: { label: string, value: string, placeholder?: string }
   checkbox?: { label: string, value: boolean }
   /** The answers as buttons, the first being the main one; by default OK and Cancel. */
   choices: Choice<string>[]
-  done: (answer: { choice: string, input: string, note: string, checked: boolean } | null) => void
+  done: (answer: Answer | null) => void
 }
+
+export interface Answer { choice: string, input: string, second: string, note: string, checked: boolean }
 
 const asking = shallowRef<Asking | null>(null)
 
-function ask(question: Omit<Asking, 'done'>): Promise<{ choice: string, input: string, note: string, checked: boolean } | null> {
+function ask(question: Omit<Asking, 'done'>): Promise<Answer | null> {
   // A question still open is cancelled by the new one.
   asking.value?.done(null)
   return new Promise((done) => {
@@ -37,11 +41,11 @@ function ask(question: Omit<Asking, 'done'>): Promise<{ choice: string, input: s
 export function useDialog() {
   return {
     asking,
-    /** A text to type (with an optional note and checkbox); null when cancelled. */
-    async prompt(options: { title: string, description?: string, input: Asking['input'], note?: Asking['note'], checkbox?: Asking['checkbox'], confirm: string }) {
+    /** A text to type (with an optional second text, note and checkbox); null when cancelled. */
+    async prompt(options: { title: string, description?: string, input: Asking['input'], second?: Asking['second'], note?: Asking['note'], checkbox?: Asking['checkbox'], confirm: string }) {
       const answer = await ask({ ...options, choices: [{ label: options.confirm, value: 'ok', color: 'primary' }] })
       // A secret is passed on exactly as typed.
-      return answer && { text: options.input?.secret ? answer.input : answer.input.trim(), note: answer.note.trim(), checked: answer.checked }
+      return answer && { text: options.input?.secret ? answer.input : answer.input.trim(), second: answer.second.trim(), note: answer.note.trim(), checked: answer.checked }
     },
     /** Yes or no; `danger` makes the yes red. */
     async confirm(options: { title: string, description: string, confirm: string, danger?: boolean }): Promise<boolean> {

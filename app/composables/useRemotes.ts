@@ -56,22 +56,16 @@ export function useRemotes(path?: Ref<string | null>) {
     return list.value.find(remote => remote.name === name)?.url ?? null
   }
 
-  /** A new remote: its name (origin when there is none yet), then its URL. */
+  /** A new remote: its name (origin when there is none yet) and its URL, in one dialog. */
   async function add(): Promise<void> {
     await load()
-    const named = await dialog.prompt({
-      title: t('composables.useRemotes.newRemote'),
-      input: { label: t('composables.useRemotes.name'), value: list.value.length ? '' : 'origin', placeholder: 'upstream' },
-      confirm: t('composables.useRemotes.next')
-    })
-    if (!named) return
     const answer = await dialog.prompt({
       title: t('composables.useRemotes.newRemote'),
-      description: t('composables.useRemotes.urlFor', { name: named.text }),
-      input: { label: t('composables.useRemotes.url'), value: '', placeholder: 'https://github.com/owner/repository.git' },
+      input: { label: t('composables.useRemotes.name'), value: list.value.length ? '' : 'origin', placeholder: 'upstream' },
+      second: { label: t('composables.useRemotes.url'), value: '', placeholder: 'https://github.com/owner/repository.git' },
       confirm: t('composables.useRemotes.addRemote')
     })
-    if (answer) await run(t('composables.useRemotes.notAdded'), where => writes.add(where, named.text, answer.text))
+    if (answer) await run(t('composables.useRemotes.notAdded'), where => writes.add(where, answer.text, answer.second))
   }
 
   async function rename(name: string): Promise<void> {

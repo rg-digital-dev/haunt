@@ -1,8 +1,6 @@
 {
   "newRemote": "New remote",
   "name": "Name",
-  "next": "Next",
-  "urlFor": "Where {name} is.",
   "url": "URL",
   "addRemote": "Add remote",
   "notAdded": "The remote was not added",
